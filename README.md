@@ -3,8 +3,8 @@
 Sendlane Tag for the Google Tag Manager (sGTM) server container enables seamless integration between your website and Sendlane. This tag allows you to add new contacts, track user events, and send relevant customer data directly to Sendlane's API.  
 
 ## Features  
-- **Add Contacts to Lists**: Add contacts to Sendlane lists with optional custom fields.
-- **Track Events** - Send custom event data, including user information and custom attributes.
+- **Add Contacts to Lists** -  Add contacts to Sendlane lists with optional custom fields.
+- **Track Events** -  Send custom event data, including user information and custom attributes.
   
 ## How to Use  
 
