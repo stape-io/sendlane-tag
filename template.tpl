@@ -594,15 +594,17 @@ function sendEvent(requestData) {
   sendHttpRequest(
     url,
     (statusCode, headers, body) => {
-      logToConsole({
-        Name: 'Sendlane',
-        Type: 'Response',
-        TraceId: traceId,
-        EventName: data.type,
-        ResponseStatusCode: statusCode,
-        ResponseHeaders: headers,
-        ResponseBody: body,
-      });
+      logToConsole(
+        JSON.stringify({
+          Name: 'Sendlane',
+          Type: 'Response',
+          TraceId: traceId,
+          EventName: data.type,
+          ResponseStatusCode: statusCode,
+          ResponseHeaders: headers,
+          ResponseBody: body,
+        })
+      );
 
       if (!data.useOptimisticScenario) {
         if (statusCode >= 200 && statusCode < 400) {
@@ -633,14 +635,16 @@ function handleAddContactToList() {
     });
   } else {
     if (isLoggingEnabled) {
-      logToConsole({
-        Name: 'Sendlane',
-        Type: 'Message',
-        TraceId: traceId,
-        EventName: data.type,
-        Message: 'No contact was added to list.',
-        Reason: 'You must set at last the email or phone.'
-      });
+      logToConsole(
+        JSON.stringify({
+          Name: 'Sendlane',
+          Type: 'Message',
+          TraceId: traceId,
+          EventName: data.type,
+          Message: 'No contact was added to list.',
+          Reason: 'You must set at last the email or phone.'
+        })
+      );
     }
     data.gtmOnFailure();
   } 
