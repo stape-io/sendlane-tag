@@ -65,17 +65,19 @@ function sendEvent(requestData) {
   sendHttpRequest(
     url,
     (statusCode, headers, body) => {
-      logToConsole(
-        JSON.stringify({
-          Name: 'Sendlane',
-          Type: 'Response',
-          TraceId: traceId,
-          EventName: data.type,
-          ResponseStatusCode: statusCode,
-          ResponseHeaders: headers,
-          ResponseBody: body
-        })
-      );
+      if (isLoggingEnabled) {
+        logToConsole(
+          JSON.stringify({
+            Name: 'Sendlane',
+            Type: 'Response',
+            TraceId: traceId,
+            EventName: data.type,
+            ResponseStatusCode: statusCode,
+            ResponseHeaders: headers,
+            ResponseBody: body
+          })
+        );
+      }
 
       if (!data.useOptimisticScenario) {
         if (statusCode >= 200 && statusCode < 400) {
