@@ -1,4 +1,6 @@
 homepage: 'https://stape.io/'
 versions:
+  - sha: 51c4b14e4bbf9037d503de941c536eaca83e5f38
+    changeNotes: Fixed logging conditions.
   - sha: 7bdae7e8f6a79804e4c3c07abc0264301683a893
     changeNotes: Initial release.
