@@ -73,7 +73,7 @@ function sendEvent(requestData) {
           EventName: data.type,
           ResponseStatusCode: statusCode,
           ResponseHeaders: headers,
-          ResponseBody: body,
+          ResponseBody: body
         })
       );
 
