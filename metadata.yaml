@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/sendlane-tag'
 versions:
+  - sha: ece22f5bed64af16bcb4add540d63b643ad208b1
+    changeNotes: Remove unnecessary code.
   - sha: a15338cc53cca99b7b0afbe68daff689f0b6e86d
     changeNotes: General code improvements, add BigQuery logging and format code with Prettier.
   - sha: 51c4b14e4bbf9037d503de941c536eaca83e5f38
