@@ -1,3 +1,5 @@
+/// <reference path="./server-gtm-sandboxed-apis.d.ts" />
+
 const getRequestHeader = require('getRequestHeader');
 const getAllEventData = require('getAllEventData');
 const setCookie = require('setCookie');
@@ -8,15 +10,19 @@ const sendHttpRequest = require('sendHttpRequest');
 const JSON = require('JSON');
 const logToConsole = require('logToConsole');
 const getContainerVersion = require('getContainerVersion');
+const getTimestampMillis = require('getTimestampMillis');
+const getType = require('getType');
+const BigQuery = require('BigQuery');
+const encodeUri = require('encodeUri');
 
-/**********************************************************************************************/
+/*==============================================================================
+==============================================================================*/
 
-const isLoggingEnabled = determinateIsLoggingEnabled();
-const traceId = isLoggingEnabled ? getRequestHeader('trace-id') : undefined;
-
+const traceId = getRequestHeader('trace-id');
 const eventData = getAllEventData();
+const useOptimisticScenario = isUIFieldTrue(data.useOptimisticScenario);
 
-if (!isConsentGivenOrNotRequired()) {
+if (!isConsentGivenOrNotRequired(data, eventData)) {
   return data.gtmOnSuccess();
 }
 
@@ -34,52 +40,45 @@ const actionHandlers = {
 
 const handler = actionHandlers[data.type];
 if (handler) {
-  handler();
+  handler(data, eventData);
 }
 
-if (data.useOptimisticScenario) {
+if (useOptimisticScenario) {
   data.gtmOnSuccess();
 }
 
-/**********************************************************************************************/
-// Vendor related functions
+/*==============================================================================
+  Vendor related functions
+==============================================================================*/
 
-function sendEvent(requestData) {
+function sendEvent(data, requestData) {
   const url = 'https://api.sendlane.com/v2' + requestData.path;
   const requestBody = requestData.body;
-  
-  if (isLoggingEnabled) {
-    logToConsole(
-      JSON.stringify({
-        Name: 'Sendlane',
-        Type: 'Request',
-        TraceId: traceId,
-        EventName: data.type,
-        RequestMethod: 'POST',
-        RequestUrl: url,
-        RequestBody: requestBody
-      })
-    );
-  }
-  
+
+  log({
+    Name: 'Sendlane',
+    Type: 'Request',
+    TraceId: traceId,
+    EventName: data.type,
+    RequestMethod: 'POST',
+    RequestUrl: url,
+    RequestBody: requestBody
+  });
+
   sendHttpRequest(
     url,
     (statusCode, headers, body) => {
-      if (isLoggingEnabled) {
-        logToConsole(
-          JSON.stringify({
-            Name: 'Sendlane',
-            Type: 'Response',
-            TraceId: traceId,
-            EventName: data.type,
-            ResponseStatusCode: statusCode,
-            ResponseHeaders: headers,
-            ResponseBody: body
-          })
-        );
-      }
+      log({
+        Name: 'Sendlane',
+        Type: 'Response',
+        TraceId: traceId,
+        EventName: data.type,
+        ResponseStatusCode: statusCode,
+        ResponseHeaders: headers,
+        ResponseBody: body
+      });
 
-      if (!data.useOptimisticScenario) {
+      if (!useOptimisticScenario) {
         if (statusCode >= 200 && statusCode < 400) {
           data.gtmOnSuccess();
         } else {
@@ -99,45 +98,40 @@ function sendEvent(requestData) {
   );
 }
 
-function handleAddContactToList() {
-  const mappedAddContactToListData = mapAddContactToList(eventData, data);
+function handleAddContactToList(data, eventData) {
+  const mappedAddContactToListData = mapAddContactToList(data, eventData);
   if (validateContactData(mappedAddContactToListData)) {
-    sendEvent({
-      path: '/lists/' + data.listId + '/contacts',
-      body: mappedAddContactToListData 
+    sendEvent(data, {
+      path: '/lists/' + encodeUri(data.listId) + '/contacts',
+      body: mappedAddContactToListData
     });
   } else {
-    if (isLoggingEnabled) {
-      logToConsole(
-        JSON.stringify({
-          Name: 'Sendlane',
-          Type: 'Message',
-          TraceId: traceId,
-          EventName: data.type,
-          Message: 'No contact was added to list.',
-          Reason: 'You must set at last the email or phone.'
-        })
-      );
-    }
+    log({
+      Name: 'Sendlane',
+      Type: 'Message',
+      TraceId: traceId,
+      EventName: data.type,
+      Message: 'No contact was added to list.',
+      Reason: 'You must set at last the email or phone.'
+    });
     data.gtmOnFailure();
-  } 
+  }
 }
 
-function mapAddContactToList(eventData, data) {
+function mapAddContactToList(data, eventData) {
   let mappedData = {
     contacts: [{}]
   };
-  
-  mappedData = addAddContactToListData(eventData, mappedData);
-  mappedData = addAddContactToListCustomFieldsData(eventData, mappedData);
+
+  mappedData = addAddContactToListData(data, eventData, mappedData);
+  mappedData = addAddContactToListCustomFieldsData(data, mappedData);
 
   return mappedData;
 }
 
-function addAddContactToListData(eventData, mappedData) {
-  let contacts;
+function addAddContactToListData(data, eventData, mappedData) {
   const user_data = eventData.user_data || {};
-  
+
   if (eventData.email) mappedData.contacts[0].email = eventData.email;
   else if (user_data.email_address) mappedData.contacts[0].email = user_data.email_address;
   else if (user_data.email) mappedData.contacts[0].email = user_data.email;
@@ -148,19 +142,19 @@ function addAddContactToListData(eventData, mappedData) {
 
   if (eventData.phone) mappedData.contacts[0].phone = eventData.phone;
   else if (user_data.phone_number) mappedData.contacts[0].phone = user_data.phone_number;
-  
+
   if (data.customerProperties) {
-    data.customerProperties.forEach((d) => mappedData.contacts[0][d.name] = d.value);
+    data.customerProperties.forEach((d) => (mappedData.contacts[0][d.name] = d.value));
   }
-  
+
   if (mappedData.contacts[0].email && data.storeEmail) {
     storeCookie('email', mappedData.contacts[0].email);
   }
-  
+
   return mappedData;
 }
 
-function addAddContactToListCustomFieldsData(eventData, mappedData) {
+function addAddContactToListCustomFieldsData(data, mappedData) {
   if (data.customerCustomFields) {
     mappedData.contacts[0].custom_fields = data.customerCustomFields.map((d) => {
       return {
@@ -169,7 +163,7 @@ function addAddContactToListCustomFieldsData(eventData, mappedData) {
       };
     });
   }
-  
+
   return mappedData;
 }
 
@@ -178,27 +172,27 @@ function validateContactData(mappedAddContactToListData) {
   return !!(contact.email || contact.phone);
 }
 
-function handleEvent() {
-  const mappedEventData = mapEvent(eventData, data);
-  sendEvent({
+function handleEvent(data, eventData) {
+  const mappedEventData = mapEvent(data, eventData);
+  sendEvent(data, {
     path: '/tracking/event',
-    body: mappedEventData 
+    body: mappedEventData
   });
 }
 
-function mapEvent(eventData, data) {
+function mapEvent(data, eventData) {
   let mappedData = {
     token: data.customIntegrationToken,
     custom_event: data.eventName
   };
-  
-  mappedData = addEventUserData(eventData, mappedData);
-  mappedData = addEventCustomData(eventData, mappedData);
- 
+
+  mappedData = addEventUserData(data, eventData, mappedData);
+  mappedData = addEventCustomData(data, mappedData);
+
   return mappedData;
 }
 
-function addEventUserData(eventData, mappedData) {
+function addEventUserData(data, eventData, mappedData) {
   const user_data = eventData.user_data || {};
 
   if (eventData.email) mappedData.email = eventData.email;
@@ -211,29 +205,34 @@ function addEventUserData(eventData, mappedData) {
 
   if (eventData.phone) mappedData.phone = eventData.phone;
   else if (user_data.phone_number) mappedData.phone = user_data.phone_number;
-  
+
   if (data.eventCustomerData) {
-    data.eventCustomerData.forEach((d) => mappedData[d.name] = d.value);
+    data.eventCustomerData.forEach((d) => (mappedData[d.name] = d.value));
   }
-  
+
   if (mappedData.email && data.storeEmail) {
     storeCookie('email', mappedData.email);
   }
-  
+
   return mappedData;
 }
 
-function addEventCustomData(eventData, mappedData) {
+function addEventCustomData(data, mappedData) {
   if (data.eventCustomData) {
     mappedData.data = {};
-    data.eventCustomData.forEach((d) => mappedData.data[d.name] = d.value);
+    data.eventCustomData.forEach((d) => (mappedData.data[d.name] = d.value));
   }
-  
+
   return mappedData;
 }
 
-/**********************************************************************************************/
-// Helpers
+/*==============================================================================
+  Helpers
+==============================================================================*/
+
+function isUIFieldTrue(field) {
+  return [true, 'true'].indexOf(field) !== -1;
+}
 
 function storeCookie(name, value) {
   setCookie(COOKIE_PREFIX + name, value, {
@@ -246,11 +245,72 @@ function storeCookie(name, value) {
   });
 }
 
-function isConsentGivenOrNotRequired() {
+function isConsentGivenOrNotRequired(data, eventData) {
   if (data.adStorageConsent !== 'required') return true;
   if (eventData.consent_state) return !!eventData.consent_state.ad_storage;
   const xGaGcs = eventData['x-ga-gcs'] || ''; // x-ga-gcs is a string like "G110"
   return xGaGcs[2] === '1';
+}
+
+function log(rawDataToLog) {
+  const logDestinationsHandlers = {};
+  if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
+  if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
+
+  const keyMappings = {
+    // No transformation for Console is needed.
+    bigQuery: {
+      Name: 'tag_name',
+      Type: 'type',
+      TraceId: 'trace_id',
+      EventName: 'event_name',
+      RequestMethod: 'request_method',
+      RequestUrl: 'request_url',
+      RequestBody: 'request_body',
+      ResponseStatusCode: 'response_status_code',
+      ResponseHeaders: 'response_headers',
+      ResponseBody: 'response_body'
+    }
+  };
+
+  for (const logDestination in logDestinationsHandlers) {
+    const handler = logDestinationsHandlers[logDestination];
+    if (!handler) continue;
+
+    const mapping = keyMappings[logDestination];
+    const dataToLog = mapping ? {} : rawDataToLog;
+
+    if (mapping) {
+      for (const key in rawDataToLog) {
+        const mappedKey = mapping[key] || key;
+        dataToLog[mappedKey] = rawDataToLog[key];
+      }
+    }
+
+    handler(dataToLog);
+  }
+}
+
+function logConsole(dataToLog) {
+  logToConsole(JSON.stringify(dataToLog));
+}
+
+function logToBigQuery(dataToLog) {
+  const connectionInfo = {
+    projectId: data.logBigQueryProjectId,
+    datasetId: data.logBigQueryDatasetId,
+    tableId: data.logBigQueryTableId
+  };
+
+  dataToLog.timestamp = getTimestampMillis();
+
+  ['request_body', 'response_headers', 'response_body'].forEach((p) => {
+    dataToLog[p] = JSON.stringify(dataToLog[p]);
+  });
+
+  const bigquery =
+    getType(BigQuery) === 'function' ? BigQuery() /* Only during Unit Tests */ : BigQuery;
+  bigquery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
 }
 
 function determinateIsLoggingEnabled() {
@@ -273,4 +333,9 @@ function determinateIsLoggingEnabled() {
   }
 
   return data.logType === 'always';
+}
+
+function determinateIsLoggingEnabledForBigQuery() {
+  if (data.bigQueryLogType === 'no') return false;
+  return data.bigQueryLogType === 'always';
 }
