@@ -1,6 +1,8 @@
 homepage: 'https://stape.io/'
 documentation: 'https://github.com/stape-io/sendlane-tag'
 versions:
+  - sha: f8b0d407104f229d17476c741a4fd0e7a588420a
+    changeNotes: Updated consent section.
   - sha: ece22f5bed64af16bcb4add540d63b643ad208b1
     changeNotes: Remove unnecessary code.
   - sha: a15338cc53cca99b7b0afbe68daff689f0b6e86d
