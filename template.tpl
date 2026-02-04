@@ -35,158 +35,166 @@ ___TEMPLATE_PARAMETERS___
 
 [
   {
-    "type": "SELECT",
-    "name": "type",
-    "displayName": "Type",
-    "macrosInSelect": false,
-    "selectItems": [
-      {
-        "value": "event",
-        "displayValue": "Event"
-      },
-      {
-        "value": "addContactToList",
-        "displayValue": "Add Contact to List"
-      }
-    ],
-    "simpleValueType": true,
-    "defaultValue": "event",
-    "alwaysInSummary": true
-  },
-  {
-    "type": "TEXT",
-    "name": "apiToken",
-    "displayName": "API Token",
-    "simpleValueType": true,
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      }
-    ],
-    "help": "\u003ca href\u003d\"https://help.sendlane.com/article/706-how-to-generate-authorization-tokens#api\" target\u003d\"_blank\"\u003eLearn more\u003c/a\u003e about how to get the API Token."
-  },
-  {
-    "type": "TEXT",
-    "name": "customIntegrationToken",
-    "displayName": "Custom Integration Token",
-    "simpleValueType": true,
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      }
-    ],
-    "help": "\u003ca href\u003d\"https://help.sendlane.com/article/706-how-to-generate-authorization-tokens#custom-integration\" target\u003d\"_blank\"\u003eLearn more\u003c/a\u003e about how to get the Custom Integration Token.",
-    "enablingConditions": [
-      {
-        "paramName": "type",
-        "paramValue": "event",
-        "type": "EQUALS"
-      }
-    ]
-  },
-  {
-    "type": "TEXT",
-    "name": "eventName",
-    "displayName": "Event Name",
-    "simpleValueType": true,
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      }
-    ],
-    "enablingConditions": [
-      {
-        "paramName": "type",
-        "paramValue": "event",
-        "type": "EQUALS"
-      }
-    ]
-  },
-  {
-    "type": "TEXT",
-    "name": "listId",
-    "simpleValueType": true,
-    "valueValidators": [
-      {
-        "type": "NON_EMPTY"
-      },
-      {
-        "type": "NUMBER"
-      }
-    ],
-    "enablingConditions": [
-      {
-        "paramName": "type",
-        "paramValue": "addContactToList",
-        "type": "EQUALS"
-      }
-    ],
-    "displayName": "List ID"
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "useOptimisticScenario",
-    "checkboxText": "Use Optimistic Scenario",
-    "simpleValueType": true,
-    "help": "The tag will call gtmOnSuccess() without waiting for a response from the API. This will speed up sGTM response time however your tag will always return the status fired successfully even in case it is not."
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "overrideCookieDomain",
-    "checkboxText": "Override the cookie domain",
-    "simpleValueType": true,
+    "type": "GROUP",
+    "name": "configGroup",
+    "displayName": "",
+    "groupStyle": "NO_ZIPPY",
     "subParams": [
       {
-        "type": "TEXT",
-        "name": "overridenCookieDomain",
-        "displayName": "Cookie Domain",
-        "simpleValueType": true,
-        "enablingConditions": [
+        "type": "SELECT",
+        "name": "type",
+        "displayName": "Type",
+        "macrosInSelect": false,
+        "selectItems": [
           {
-            "paramName": "overrideCookieDomain",
-            "paramValue": true,
-            "type": "EQUALS"
+            "value": "event",
+            "displayValue": "Event"
+          },
+          {
+            "value": "addContactToList",
+            "displayValue": "Add Contact to List"
           }
         ],
-        "help": "",
+        "simpleValueType": true,
+        "defaultValue": "event",
+        "alwaysInSummary": true
+      },
+      {
+        "type": "TEXT",
+        "name": "apiToken",
+        "displayName": "API Token",
+        "simpleValueType": true,
         "valueValidators": [
           {
             "type": "NON_EMPTY"
           }
         ],
-        "valueHint": "example.com"
-      }
-    ],
-    "help": "Enable this option to override the cookie domain.\n\u003cbr\u003e\nEnter your website\u0027s top-level domain as a fixed value (e.g., example.com).\n\u003cbr\u003e\nIf left unchecked, the domain will be automatically determined using the following priority:\n\u003cul\u003e\n\u003cli\u003eDomain of the \u003ci\u003eForwarded\u003c/i\u003e header (if present).\u003c/li\u003e\n\u003cli\u003eDomain of the \u003ci\u003eX-Forwarded-Host\u003c/i\u003e header (if present).\u003c/li\u003e\n\u003cli\u003eDomain of the \u003ci\u003eHost\u003c/i\u003e header.\u003c/li\u003e\n\u003c/ul\u003e",
-    "enablingConditions": [
-      {
-        "paramName": "type",
-        "paramValue": "event",
-        "type": "EQUALS"
+        "help": "\u003ca href\u003d\"https://help.sendlane.com/article/706-how-to-generate-authorization-tokens#api\" target\u003d\"_blank\"\u003eLearn more\u003c/a\u003e about how to get the API Token."
       },
       {
-        "paramName": "type",
-        "paramValue": "addContactToList",
-        "type": "EQUALS"
-      }
-    ]
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "storeEmail",
-    "checkboxText": "Store email in cookies",
-    "simpleValueType": true,
-    "help": "Allow storing the email in cookies if it is provided and use it as a fallback if it is not provided for the current event or contact addition to list.",
-    "enablingConditions": [
-      {
-        "paramName": "type",
-        "paramValue": "event",
-        "type": "EQUALS"
+        "type": "TEXT",
+        "name": "customIntegrationToken",
+        "displayName": "Custom Integration Token",
+        "simpleValueType": true,
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "help": "\u003ca href\u003d\"https://help.sendlane.com/article/706-how-to-generate-authorization-tokens#custom-integration\" target\u003d\"_blank\"\u003eLearn more\u003c/a\u003e about how to get the Custom Integration Token.",
+        "enablingConditions": [
+          {
+            "paramName": "type",
+            "paramValue": "event",
+            "type": "EQUALS"
+          }
+        ]
       },
       {
-        "paramName": "type",
-        "paramValue": "addContactToList",
-        "type": "EQUALS"
+        "type": "TEXT",
+        "name": "eventName",
+        "displayName": "Event Name",
+        "simpleValueType": true,
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "enablingConditions": [
+          {
+            "paramName": "type",
+            "paramValue": "event",
+            "type": "EQUALS"
+          }
+        ]
+      },
+      {
+        "type": "TEXT",
+        "name": "listId",
+        "simpleValueType": true,
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          },
+          {
+            "type": "NUMBER"
+          }
+        ],
+        "enablingConditions": [
+          {
+            "paramName": "type",
+            "paramValue": "addContactToList",
+            "type": "EQUALS"
+          }
+        ],
+        "displayName": "List ID"
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "useOptimisticScenario",
+        "checkboxText": "Use Optimistic Scenario",
+        "simpleValueType": true,
+        "help": "The tag will call gtmOnSuccess() without waiting for a response from the API. This will speed up sGTM response time however your tag will always return the status fired successfully even in case it is not."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "overrideCookieDomain",
+        "checkboxText": "Override the cookie domain",
+        "simpleValueType": true,
+        "subParams": [
+          {
+            "type": "TEXT",
+            "name": "overridenCookieDomain",
+            "displayName": "Cookie Domain",
+            "simpleValueType": true,
+            "enablingConditions": [
+              {
+                "paramName": "overrideCookieDomain",
+                "paramValue": true,
+                "type": "EQUALS"
+              }
+            ],
+            "help": "",
+            "valueValidators": [
+              {
+                "type": "NON_EMPTY"
+              }
+            ],
+            "valueHint": "example.com"
+          }
+        ],
+        "help": "Enable this option to override the cookie domain.\n\u003cbr\u003e\nEnter your website\u0027s top-level domain as a fixed value (e.g., example.com).\n\u003cbr\u003e\nIf left unchecked, the domain will be automatically determined using the following priority:\n\u003cul\u003e\n\u003cli\u003eDomain of the \u003ci\u003eForwarded\u003c/i\u003e header (if present).\u003c/li\u003e\n\u003cli\u003eDomain of the \u003ci\u003eX-Forwarded-Host\u003c/i\u003e header (if present).\u003c/li\u003e\n\u003cli\u003eDomain of the \u003ci\u003eHost\u003c/i\u003e header.\u003c/li\u003e\n\u003c/ul\u003e",
+        "enablingConditions": [
+          {
+            "paramName": "type",
+            "paramValue": "event",
+            "type": "EQUALS"
+          },
+          {
+            "paramName": "type",
+            "paramValue": "addContactToList",
+            "type": "EQUALS"
+          }
+        ]
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "storeEmail",
+        "checkboxText": "Store email in cookies",
+        "simpleValueType": true,
+        "help": "Allow storing the email in cookies if it is provided and use it as a fallback if it is not provided for the current event or contact addition to list.",
+        "enablingConditions": [
+          {
+            "paramName": "type",
+            "paramValue": "event",
+            "type": "EQUALS"
+          },
+          {
+            "paramName": "type",
+            "paramValue": "addContactToList",
+            "type": "EQUALS"
+          }
+        ]
       }
     ]
   },
@@ -476,14 +484,13 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "GROUP",
-    "name": "consentSettingsGroup",
+    "name": "tagExecutionConsentSettingsGroup",
     "displayName": "Tag Execution Consent Settings",
     "groupStyle": "ZIPPY_CLOSED",
     "subParams": [
       {
         "type": "RADIO",
         "name": "adStorageConsent",
-        "displayName": "",
         "radioItems": [
           {
             "value": "optional",
@@ -602,20 +609,19 @@ ___SANDBOXED_JS_FOR_SERVER___
 
 /// <reference path="./server-gtm-sandboxed-apis.d.ts" />
 
-const getRequestHeader = require('getRequestHeader');
-const getAllEventData = require('getAllEventData');
-const setCookie = require('setCookie');
-const getCookieValues = require('getCookieValues');
-const makeString = require('makeString');
-const makeInteger = require('makeInteger');
-const sendHttpRequest = require('sendHttpRequest');
-const JSON = require('JSON');
-const logToConsole = require('logToConsole');
-const getContainerVersion = require('getContainerVersion');
-const getTimestampMillis = require('getTimestampMillis');
-const getType = require('getType');
 const BigQuery = require('BigQuery');
 const encodeUri = require('encodeUri');
+const getAllEventData = require('getAllEventData');
+const getContainerVersion = require('getContainerVersion');
+const getCookieValues = require('getCookieValues');
+const getRequestHeader = require('getRequestHeader');
+const getTimestampMillis = require('getTimestampMillis');
+const JSON = require('JSON');
+const logToConsole = require('logToConsole');
+const makeInteger = require('makeInteger');
+const makeString = require('makeString');
+const sendHttpRequest = require('sendHttpRequest');
+const setCookie = require('setCookie');
 
 /*==============================================================================
 ==============================================================================*/
