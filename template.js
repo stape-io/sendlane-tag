@@ -1,19 +1,18 @@
 /// <reference path="./server-gtm-sandboxed-apis.d.ts" />
 
-const getRequestHeader = require('getRequestHeader');
-const getAllEventData = require('getAllEventData');
-const setCookie = require('setCookie');
-const getCookieValues = require('getCookieValues');
-const makeString = require('makeString');
-const makeInteger = require('makeInteger');
-const sendHttpRequest = require('sendHttpRequest');
-const JSON = require('JSON');
-const logToConsole = require('logToConsole');
-const getContainerVersion = require('getContainerVersion');
-const getTimestampMillis = require('getTimestampMillis');
-const getType = require('getType');
 const BigQuery = require('BigQuery');
 const encodeUri = require('encodeUri');
+const getAllEventData = require('getAllEventData');
+const getContainerVersion = require('getContainerVersion');
+const getCookieValues = require('getCookieValues');
+const getRequestHeader = require('getRequestHeader');
+const getTimestampMillis = require('getTimestampMillis');
+const JSON = require('JSON');
+const logToConsole = require('logToConsole');
+const makeInteger = require('makeInteger');
+const makeString = require('makeString');
+const sendHttpRequest = require('sendHttpRequest');
+const setCookie = require('setCookie');
 
 /*==============================================================================
 ==============================================================================*/
