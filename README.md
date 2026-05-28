@@ -14,7 +14,7 @@ The Sendlane Tag for the Google Tag Manager (sGTM) server container enables seam
 3. **Select Action Type** - Choose whether to add a contact to a list or send an event.
 4. **Define Contact and Event Data** - Map relevant user attributes, custom fields, and event data.
 
-## Useful links:
+## Useful Resources
 
 - [Step-by-step guide on how to configure Sendlane tag](https://stape.io/blog/sendlane-server-side-tracking)
 
