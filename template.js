@@ -1,12 +1,8 @@
-/// <reference path="./server-gtm-sandboxed-apis.d.ts" />
-
-const BigQuery = require('BigQuery');
 const encodeUri = require('encodeUri');
 const getAllEventData = require('getAllEventData');
-const getContainerVersion = require('getContainerVersion');
+
 const getCookieValues = require('getCookieValues');
 const getRequestHeader = require('getRequestHeader');
-const getTimestampMillis = require('getTimestampMillis');
 const JSON = require('JSON');
 const logToConsole = require('logToConsole');
 const makeInteger = require('makeInteger');
@@ -17,7 +13,6 @@ const setCookie = require('setCookie');
 /*==============================================================================
 ==============================================================================*/
 
-const traceId = getRequestHeader('trace-id');
 const eventData = getAllEventData();
 const useOptimisticScenario = isUIFieldTrue(data.useOptimisticScenario);
 
@@ -54,29 +49,9 @@ function sendEvent(data, requestData) {
   const url = 'https://api.sendlane.com/v2' + requestData.path;
   const requestBody = requestData.body;
 
-  log({
-    Name: 'Sendlane',
-    Type: 'Request',
-    TraceId: traceId,
-    EventName: data.type,
-    RequestMethod: 'POST',
-    RequestUrl: url,
-    RequestBody: requestBody
-  });
-
   sendHttpRequest(
     url,
     (statusCode, headers, body) => {
-      log({
-        Name: 'Sendlane',
-        Type: 'Response',
-        TraceId: traceId,
-        EventName: data.type,
-        ResponseStatusCode: statusCode,
-        ResponseHeaders: headers,
-        ResponseBody: body
-      });
-
       if (!useOptimisticScenario) {
         if (statusCode >= 200 && statusCode < 400) {
           data.gtmOnSuccess();
@@ -108,9 +83,8 @@ function handleAddContactToList(data, eventData) {
     log({
       Name: 'Sendlane',
       Type: 'Message',
-      TraceId: traceId,
       EventName: data.type,
-      Message: 'No contact was added to list.',
+      Message: '🛑 [ERROR] No contact was added to list.',
       Reason: 'You must set at last the email or phone.'
     });
     data.gtmOnFailure();
@@ -131,16 +105,15 @@ function mapAddContactToList(data, eventData) {
 function addAddContactToListData(data, eventData, mappedData) {
   const user_data = eventData.user_data || {};
 
-  if (eventData.email) mappedData.contacts[0].email = eventData.email;
-  else if (user_data.email_address) mappedData.contacts[0].email = user_data.email_address;
-  else if (user_data.email) mappedData.contacts[0].email = user_data.email;
+  const email = eventData.email || user_data.email_address || user_data.email;
+  if (email) mappedData.contacts[0].email = email;
   else if (data.storeEmail) {
-    let emailCookie = getCookieValues(COOKIE_PREFIX + 'email');
-    if (emailCookie.length) mappedData.contacts[0].email = emailCookie[0];
+    let emailCookie = getCookieValues(COOKIE_PREFIX + 'email')[0];
+    if (emailCookie) mappedData.contacts[0].email = emailCookie;
   }
 
-  if (eventData.phone) mappedData.contacts[0].phone = eventData.phone;
-  else if (user_data.phone_number) mappedData.contacts[0].phone = user_data.phone_number;
+  const phone = eventData.phone || user_data.phone_number;
+  if (phone) mappedData.contacts[0].phone = phone;
 
   if (data.customerProperties) {
     data.customerProperties.forEach((d) => (mappedData.contacts[0][d.name] = d.value));
@@ -194,16 +167,15 @@ function mapEvent(data, eventData) {
 function addEventUserData(data, eventData, mappedData) {
   const user_data = eventData.user_data || {};
 
-  if (eventData.email) mappedData.email = eventData.email;
-  else if (user_data.email_address) mappedData.email = user_data.email_address;
-  else if (user_data.email) mappedData.email = user_data.email;
+  const email = eventData.email || user_data.email_address || user_data.email;
+  if (email) mappedData.email = email;
   else if (data.storeEmail) {
-    let emailCookie = getCookieValues(COOKIE_PREFIX + 'email');
-    if (emailCookie.length) mappedData.email = emailCookie[0];
+    let emailCookie = getCookieValues(COOKIE_PREFIX + 'email')[0];
+    if (emailCookie) mappedData.email = emailCookie;
   }
 
-  if (eventData.phone) mappedData.phone = eventData.phone;
-  else if (user_data.phone_number) mappedData.phone = user_data.phone_number;
+  const phone = eventData.phone || user_data.phone_number;
+  if (phone) mappedData.phone = phone;
 
   if (data.eventCustomerData) {
     data.eventCustomerData.forEach((d) => (mappedData[d.name] = d.value));
@@ -252,87 +224,6 @@ function isConsentGivenOrNotRequired(data, eventData) {
 }
 
 function log(rawDataToLog) {
-  const logDestinationsHandlers = {};
-  if (determinateIsLoggingEnabled()) logDestinationsHandlers.console = logConsole;
-  if (determinateIsLoggingEnabledForBigQuery()) logDestinationsHandlers.bigQuery = logToBigQuery;
-
-  const keyMappings = {
-    // No transformation for Console is needed.
-    bigQuery: {
-      Name: 'tag_name',
-      Type: 'type',
-      TraceId: 'trace_id',
-      EventName: 'event_name',
-      RequestMethod: 'request_method',
-      RequestUrl: 'request_url',
-      RequestBody: 'request_body',
-      ResponseStatusCode: 'response_status_code',
-      ResponseHeaders: 'response_headers',
-      ResponseBody: 'response_body'
-    }
-  };
-
-  for (const logDestination in logDestinationsHandlers) {
-    const handler = logDestinationsHandlers[logDestination];
-    if (!handler) continue;
-
-    const mapping = keyMappings[logDestination];
-    const dataToLog = mapping ? {} : rawDataToLog;
-
-    if (mapping) {
-      for (const key in rawDataToLog) {
-        const mappedKey = mapping[key] || key;
-        dataToLog[mappedKey] = rawDataToLog[key];
-      }
-    }
-
-    handler(dataToLog);
-  }
-}
-
-function logConsole(dataToLog) {
-  logToConsole(JSON.stringify(dataToLog));
-}
-
-function logToBigQuery(dataToLog) {
-  const connectionInfo = {
-    projectId: data.logBigQueryProjectId,
-    datasetId: data.logBigQueryDatasetId,
-    tableId: data.logBigQueryTableId
-  };
-
-  dataToLog.timestamp = getTimestampMillis();
-
-  ['request_body', 'response_headers', 'response_body'].forEach((p) => {
-    dataToLog[p] = JSON.stringify(dataToLog[p]);
-  });
-
-  BigQuery.insert(connectionInfo, [dataToLog], { ignoreUnknownValues: true });
-}
-
-function determinateIsLoggingEnabled() {
-  const containerVersion = getContainerVersion();
-  const isDebug = !!(
-    containerVersion &&
-    (containerVersion.debugMode || containerVersion.previewMode)
-  );
-
-  if (!data.logType) {
-    return isDebug;
-  }
-
-  if (data.logType === 'no') {
-    return false;
-  }
-
-  if (data.logType === 'debug') {
-    return isDebug;
-  }
-
-  return data.logType === 'always';
-}
-
-function determinateIsLoggingEnabledForBigQuery() {
-  if (data.bigQueryLogType === 'no') return false;
-  return data.bigQueryLogType === 'always';
+  rawDataToLog.TraceId = getRequestHeader('trace-id');
+  logToConsole(JSON.stringify(rawDataToLog));
 }
